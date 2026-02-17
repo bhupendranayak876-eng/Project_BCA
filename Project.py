@@ -4,11 +4,15 @@ import random
 import string
 
 # ------------------------------
-# Generate Strong Password Example
+# Password Generator Function
 # ------------------------------
-def generate_strong_password(length=12):
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(random.choice(characters) for _ in range(length))
+def generate_password(length, use_symbols):
+    characters = string.ascii_letters + string.digits
+    if use_symbols:
+        characters += string.punctuation
+
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
 
 
 # ------------------------------
@@ -18,45 +22,43 @@ def check_password(password):
     score = 0
     suggestions = []
 
-    # Length Check
+    # Length
     if len(password) >= 8:
         score += 1
     else:
         suggestions.append("Use at least 8 characters.")
 
-    # Uppercase Check
+    # Uppercase
     if re.search(r"[A-Z]", password):
         score += 1
     else:
         suggestions.append("Add uppercase letters (A-Z).")
 
-    # Lowercase Check
+    # Lowercase
     if re.search(r"[a-z]", password):
         score += 1
     else:
         suggestions.append("Add lowercase letters (a-z).")
 
-    # Number Check
+    # Numbers
     if re.search(r"[0-9]", password):
         score += 1
     else:
         suggestions.append("Include numbers (0-9).")
 
-    # Special Character Check
+    # Symbols
     if re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
         score += 1
     else:
         suggestions.append("Include special symbols (!@#$ etc).")
 
-    # Common Patterns Detection
-    common_patterns = [
-        "1234", "password", "admin", "qwerty", "abc123"
-    ]
+    # Common Patterns
+    common_patterns = ["1234", "password", "admin", "qwerty", "abc123"]
 
     for pattern in common_patterns:
         if pattern in password.lower():
-            suggestions.append("Avoid common patterns like '1234', 'password', etc.")
             score -= 1
+            suggestions.append("Avoid common patterns like '1234', 'password', etc.")
             break
 
     return score, suggestions
@@ -79,8 +81,28 @@ def strength_level(score):
 # ------------------------------
 st.set_page_config(page_title="Password Strength Analyzer", page_icon="🔐")
 
-st.title("🔐 Password Strength Analyzer")
-st.write("Check how secure your password is.")
+st.title("🔐 Password Strength Analyzer & Generator")
+st.write("Analyze and generate secure passwords.")
+
+# ------------------------------
+# Generator Section
+# ------------------------------
+st.subheader("🔑 Generate Strong Password")
+
+length = st.slider("Select password length", 8, 32, 12)
+use_symbols = st.checkbox("Include Special Characters")
+
+if st.button("Generate Password"):
+    generated_password = generate_password(length, use_symbols)
+    st.success("Generated Password:")
+    st.code(generated_password)
+
+st.divider()
+
+# ------------------------------
+# Analyzer Section
+# ------------------------------
+st.subheader("📊 Analyze Your Password")
 
 password = st.text_input("Enter your password:", type="password")
 
@@ -88,9 +110,6 @@ if password:
     score, suggestions = check_password(password)
     level = strength_level(score)
 
-    st.subheader("📊 Analysis Result")
-
-    # Display Strength
     if level == "Weak":
         st.error(f"Strength: {level}")
     elif level == "Medium":
@@ -100,14 +119,9 @@ if password:
 
     st.write(f"Score: {score} / 5")
 
-    # Suggestions
     if suggestions:
         st.subheader("⚠ Suggestions to Improve:")
         for s in suggestions:
             st.write(f"- {s}")
-
-        # Suggest Better Password Example
-        st.subheader("💡 Suggested Strong Password Example:")
-        st.code(generate_strong_password())
     else:
-        st.success("Excellent! Your password meets strong security standards.")
+        st.success("Excellent! Your password is strong.")
